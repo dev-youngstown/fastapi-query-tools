@@ -124,7 +124,7 @@ def get_multi(self, db: Session, filters: List[Filter] = [], sorters: List[Sort]
 ### Example Endpoint
 
 ```python
-@router.get("items", response_model=Page[schemas.Item])
+@router.get("/items", response_model=Page[schemas.Item])
 def get_items(db: db_dep, filters: FilterDep, sorters: SortDep):
     return crud.items.get_multi(db, filters, sorters)
 ```
