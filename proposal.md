@@ -11,112 +11,62 @@ The purpose of this project is to develop a standard way of filtering and sortin
 
 ## Methodology 
 
-### Models
+### Query Model
 
-#### 1. Filter
-Request model for accepting filter params
 
 ```python
-from pydantic import BaseModel
-
-class Filter(BaseModel):
-        field: str
-        value: Any
-
-def get_filters(filters: Annotated[str | None, Query()] = None) -> list[Filter]:
-        if filters is None:
-                return []
-
-        # Will need to add some validation to make sure json is valid
-
-        loaded_filters = json.loads(filters)
-        filters = TypeAdapter(List[Filter]).validate_python(loaded_filters)
-        return filters
-
-FilterDep = Annotated[List[Filter], Depends(get_filters)]
-```
-
-#### 2. Sort
-Request model for accepting sort params
-
-```python
-from pydantic import BaseModel
-
-class Sort(BaseModel):
-        field: str
-        order: str # (This ideally will have validation and only accept "desc" or "asc" as the value)
-
-def get_sorters(sorters: Annotated[str | None, Query()] = None) -> List[Sort]:
-        if sorters is None:
-                return []
-
-        # Will need to add some validation to make sure json is valid
-    
-        loaded_sorters = json.loads(sorters)
-        sorters = TypeAdapter(List[Sort]).validate_python(loaded_sorters)
-        return sorters
-
-SortDep = Annotated[List[Sort], Depends(get_sorters)]
+class QueryModel(BaseModel):
+    q: Optional[Any] = Field(None)
+    sort_by: Optional[str] = Field(None)
+    order: Optional[str] = Field(None)
 
 ```
+Where `q` is the search string, `sort_by` is the column to reference, and `order` is the sort direction (asc, desc).
 
 #### Model Usage
 
 ```python
 @app.get("/some/endpoint")
 async def some_endpoint(
-      *,
-      filters: FilterDep,
-      sort: SortDep
+     query: Annotated[QueryModel, Depends()],
 ):
      pass
 ```
 
 ### Query Functions
 
-#### Query Filtering
+#### Query Filtering and Sorting
 
-This function utilizes an existing query and will apply filters onto this query based on the filters param and then return the query.
-SQLAlchemy allows you to stack filters like so `query.filter(...).filter(...).filter(...)`
+This function utilizes an existing query and will apply a filter and an order_by clause onto this query based on the query_model param and then return the query.
 
 ```python
-def filter(query: Query, filters: List[Filter]) -> Query:
-        if not filters:
-                return query
+def filter_and_sort(query: Query, query_model: QueryModel) -> Query:
+        if query_model.sort_by:
+                # get column specified by sort_by
+                column = getattr(query.column_descriptions[0]['entity'], queryModel.sort_by)
 
-        for filter in filters:
-                query = query.filter(getattr(query.column_descriptions[0]['entity'], filter['field']) == filter['value'])
+                if not column:
+                        return query
+                
+                # apply filter
+                if query_model.q:
+                        query = query.filter(column.icontains(query_model.q))
+        
+                # apply sort
+                if query_model.order:
+                        query = query.order_by(column.desc()) if query_model.order == 'desc' else query.order_by(column.asc())
 
         return query
 ```
 
-#### Query Sorting
-
-This function utilizes an existing query and will apply the sorting based on the sorters param and then return the query. 
-SQLAlchemy also allows you to stack order_by like so `query.order_by(...).order_by(...).order_by(...)`
-
-```python
-def sort(query: Query, sorters: List[Sort]) -> Query:
-        if not sorters:
-                return query
-
-        for sorter in sorters:
-                column = getattr(query.column_descriptions[0]['entity'], sorter['field'])
-                if sorter['order'] == 'desc':
-                    query = query.order_by(column.desc())
-                else:
-                    query = query.order_by(column.asc())
-        return query
-```
 
 #### Query Function Usage
 
 ```python
-def get_multi(self, db: Session, filters: List[Filter] = [], sorters: List[Sort] = []) -> Page[ModelType]:
+def get_multi(self, db: Session, query_model: QueryModel) -> Page[ModelType]:
     query = select(self.model)
     
-    query = filter(query, filters)
-    query = sort(query, sorters)
+    query = filter_and_sort(query, query_model)
     
     return paginate(db, query)
 ```
@@ -125,27 +75,23 @@ def get_multi(self, db: Session, filters: List[Filter] = [], sorters: List[Sort]
 
 ```python
 @router.get("/items", response_model=Page[schemas.Item])
-def get_items(db: db_dep, filters: FilterDep, sorters: SortDep):
-    return crud.items.get_multi(db, filters, sorters)
+def get_items(db: db_dep, query: Annotated[QueryModel, Depends()]):
+    return crud.items.get_multi(db, query_model=query)
 ```
 
 #### Request Query Params
-The query params should be sent over as stringified json
 
-filters
 ```
-'[{"field":"id","value":1}, {"field":"name","value":"Item 1"}]'
+q: 1
+sort_by: "id"
+order: "desc"
 ```
 
-sorters
-```
-'[{"field":"id","order":"desc"}]'
-```
 
 #### Request URL
 
 ```
-http://localhost:8000/api/v1/resource/items?filters=%5B%20%20%20%20%20%7B%22field%22%3A%22value1%22%2C%22value%22%3A1%7D%2C%20%20%20%20%20%7B%22field%22%3A%22value2%22%2C%22value%22%3A%22value2%22%7D%20%5D&sorters=%5B%7B%22field%22%3A%22id%22%2C%22order%22%3A%22desc%22%7D%5D
+http://localhost:8000/api/v1/resource/items?q=1&sort_by=id&order=desc
 ```
 
 
