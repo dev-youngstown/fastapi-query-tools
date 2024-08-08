@@ -1,5 +1,6 @@
 <div align="center">
 <img alt="license" src="https://img.shields.io/badge/License-MIT-lightgrey">
+<a href="https://pypi.org/project/fastapi-query-tools"><img alt="pypi" src="https://img.shields.io/pypi/v/fastapi-query-tools"></a>
 <img alt="black" src="https://img.shields.io/badge/code%20style-black-000000.svg">
 </div>
 
