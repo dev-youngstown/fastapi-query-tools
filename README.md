@@ -47,7 +47,7 @@ async def get_items(*, db: Session = Depends(get_db), filter: Filter) -> List[It
 
 ## Example Request
     
-```http
+```
 curl -X 'GET' \
   'http://localhost:8000/api/items?q=item&sort_by=name&order=desc' \
   -H 'accept: application/json' \
