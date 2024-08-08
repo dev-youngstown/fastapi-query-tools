@@ -1,5 +1,5 @@
 from typing import Any
-from sqlalchemy import Select, inspect, func, FromClause, ColumnElement
+from sqlalchemy import Select, inspect, func, FromClause, ColumnElement, String, cast
 from sqlalchemy.orm import (
     RelationshipProperty,
     aliased,
@@ -61,15 +61,10 @@ def filter(entity: Any, column: Any, stmt: Select, query_model: QueryModel) -> S
         stmt = stmt.join(related_entity)
 
         # Filter using the combined column
-        if isinstance(query_model.q, str):
-            return stmt.filter(combined_column.ilike(f"%{query_model.q}%"))
-        else:
-            return stmt.filter(combined_column.contains(query_model.q))
+        return stmt.filter(cast(combined_column, String).ilike(f"%{query_model.q}%"))
+
     else:
-        if isinstance(query_model.q, str):
-            return stmt.filter(column.ilike(f"%{query_model.q}%"))
-        else:
-            return stmt.filter(column.contains(query_model.q))
+        return stmt.filter(cast(column, String).ilike(f"%{query_model.q}%"))
 
 
 def sort(entity: Any, column: Any, stmt: Select, query_model: QueryModel) -> Select:
