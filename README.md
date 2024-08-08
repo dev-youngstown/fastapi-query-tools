@@ -54,4 +54,4 @@ curl -X 'GET' \
   -H 'accept: application/json' \
 ```
 
-Where `q` is a query, `sort_by` is a field (column) to sort by, and `order` (asc, desc) is an order of sorting.
+Where `q` is a query, `sort_by` is a field (column) to sort by, and `order` (asc, desc) is the order of sorting.
