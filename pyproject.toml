@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fastapi_query_tools"
-version = "0.0.1"
+version = "0.0.6"
 authors = [
   { name="Nicolas Ott", email="nicobox2002@gmail.com" },
 ]
@@ -12,9 +12,9 @@ description = "A package to simplify filtering and sorting in FastAPI"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "pydantic==2.8.2",
-    "SQLAlchemy==2.0.31",
-    "fastapi==0.111.0"
+    "pydantic>=2.7.4",
+    "SQLAlchemy>=2.0",
+    "fastapi>=0.110.0"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from pydantic import BaseModel, Field
 from fastapi import Query
-from enums import Order
+from .enums import Order
 
 
 class QueryModel(BaseModel):
