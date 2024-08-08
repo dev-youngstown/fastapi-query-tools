@@ -1,5 +1,5 @@
 from typing import Any
-from sqlalchemy import Select, inspect, func, FromClause
+from sqlalchemy import Select, inspect, func, FromClause, ColumnElement
 from sqlalchemy.orm import (
     RelationshipProperty,
     aliased,
@@ -21,7 +21,7 @@ def is_nested(entity: Any, attribute_name: str) -> bool:
 
 def get_column_attributes(
         entity: Any, relationship_name: str
-) -> tuple[str, AliasedClass | FromClause]:
+) -> tuple[ColumnElement, AliasedClass | FromClause]:
     """
     Concat attributes of the nested entity to be used in filtering
     """
@@ -61,9 +61,15 @@ def filter(entity: Any, column: Any, stmt: Select, query_model: QueryModel) -> S
         stmt = stmt.join(related_entity)
 
         # Filter using the combined column
-        return stmt.filter(combined_column.ilike(f"%{query_model.q}%"))
+        if isinstance(query_model.q, str):
+            return stmt.filter(combined_column.ilike(f"%{query_model.q}%"))
+        else:
+            return stmt.filter(combined_column.contains(query_model.q))
     else:
-        return stmt.filter(column.ilike(f"%{query_model.q}%"))
+        if isinstance(query_model.q, str):
+            return stmt.filter(column.ilike(f"%{query_model.q}%"))
+        else:
+            return stmt.filter(column.contains(query_model.q))
 
 
 def sort(entity: Any, column: Any, stmt: Select, query_model: QueryModel) -> Select:
