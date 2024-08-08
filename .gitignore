@@ -1,0 +1,4 @@
+dist/
+/.idea
+/.vscode
+fastapi_query_tools.egg-info/

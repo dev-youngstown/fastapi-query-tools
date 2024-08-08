@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fastapi_query_tools"
+version = "0.0.1"
+authors = [
+  { name="Nicolas Ott", email="nicobox2002@gmail.com" },
+]
+description = "A package to simplify filtering and sorting in FastAPI"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic==2.8.2",
+    "SQLAlchemy==2.0.31",
+    "fastapi==0.111.0"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/dev-youngstown/fastapi-query-tools"
+Issues = "https://github.com/dev-youngstown/fastapi-query-tools/issues"
+[tool.hatch.build.targets.wheel]
+include = [
+    "fastapi_query_tools/**"
+]
