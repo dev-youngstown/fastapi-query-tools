@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fastapi_query_tools"
-version = "1.0.3"
+version = "1.0.4"
 authors = [
   { name="Nicolas Ott", email="nicobox2002@gmail.com" },
 ]

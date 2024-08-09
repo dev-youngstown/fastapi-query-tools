@@ -58,7 +58,7 @@ def filter(entity: Any, column: Any, stmt: Select, query_model: QueryModel) -> S
         )
 
         # Join the related entity in the query
-        stmt = stmt.join(related_entity)
+        stmt = stmt.join(related_entity).select_from(entity).select_from(related_entity)
 
         # Filter using the combined column
         return stmt.filter(cast(combined_column, String).ilike(f"%{query_model.q}%"))
@@ -78,7 +78,7 @@ def sort(entity: Any, column: Any, stmt: Select, query_model: QueryModel) -> Sel
         )
 
         # Join the related entity in the query
-        stmt = stmt.join(related_entity)
+        stmt = stmt.join(related_entity).select_from(entity).select_from(related_entity)
 
         # Filter using the combined column
         return (
