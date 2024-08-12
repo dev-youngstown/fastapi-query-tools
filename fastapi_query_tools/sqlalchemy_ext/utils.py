@@ -1,5 +1,5 @@
 from typing import Any
-from sqlalchemy import Select, inspect, func, FromClause, ColumnElement, String, cast
+from sqlalchemy import Select, inspect, func, FromClause, ColumnElement, String, cast, Enum
 from sqlalchemy.orm import (
     RelationshipProperty,
     aliased,
@@ -47,6 +47,18 @@ def get_column_attributes(
     return combined_column, related_entity
 
 
+def handle_column_enum(column: Any, stmt: Select, query_model: QueryModel) -> Select | None:
+    """
+    Apply filter for enum column
+    """
+    if isinstance(column.type, Enum):
+        enum_class = column.type.enum_class
+        enum_val = enum_class(query_model.q)
+        return stmt.filter(column == enum_val)
+    else:
+        return None
+
+
 def filter(entity: Any, column: Any, stmt: Select, query_model: QueryModel) -> Select:
     """
     add filters to select statement
@@ -64,7 +76,11 @@ def filter(entity: Any, column: Any, stmt: Select, query_model: QueryModel) -> S
         return stmt.filter(cast(combined_column, String).ilike(f"%{query_model.q}%"))
 
     else:
-        return stmt.filter(cast(column, String).ilike(f"%{query_model.q}%"))
+        # Handle enum column
+        return handle_column_enum(column, stmt, query_model) if handle_column_enum(column, stmt,
+                                                                                   query_model) else stmt.filter(
+            cast(column, String).ilike(f"%{query_model.q}%")
+        )
 
 
 def sort(entity: Any, column: Any, stmt: Select, query_model: QueryModel) -> Select:
