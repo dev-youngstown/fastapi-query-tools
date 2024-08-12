@@ -1,5 +1,14 @@
 from typing import Any
-from sqlalchemy import Select, inspect, func, FromClause, ColumnElement, String, cast, Enum
+from sqlalchemy import (
+    Select,
+    inspect,
+    func,
+    FromClause,
+    ColumnElement,
+    String,
+    cast,
+    Enum,
+)
 from sqlalchemy.orm import (
     RelationshipProperty,
     aliased,
@@ -20,7 +29,7 @@ def is_nested(entity: Any, attribute_name: str) -> bool:
 
 
 def get_column_attributes(
-        entity: Any, relationship_name: str
+    entity: Any, relationship_name: str
 ) -> tuple[ColumnElement, AliasedClass | FromClause]:
     """
     Concat attributes of the nested entity to be used in filtering
@@ -47,7 +56,9 @@ def get_column_attributes(
     return combined_column, related_entity
 
 
-def handle_column_enum(column: Any, stmt: Select, query_model: QueryModel) -> Select | None:
+def handle_column_enum(
+    column: Any, stmt: Select, query_model: QueryModel
+) -> Select | None:
     """
     Apply filter for enum column
     """
@@ -77,9 +88,10 @@ def filter(entity: Any, column: Any, stmt: Select, query_model: QueryModel) -> S
 
     else:
         # Handle enum column
-        return handle_column_enum(column, stmt, query_model) if handle_column_enum(column, stmt,
-                                                                                   query_model) else stmt.filter(
-            cast(column, String).ilike(f"%{query_model.q}%")
+        return (
+            handle_column_enum(column, stmt, query_model)
+            if handle_column_enum(column, stmt, query_model) is not None
+            else stmt.filter(cast(column, String).ilike(f"%{query_model.q}%"))
         )
 
 
