@@ -29,7 +29,7 @@ def is_nested(entity: Any, attribute_name: str) -> bool:
 
 
 def get_column_attributes(
-    entity: Any, relationship_name: str
+        entity: Any, relationship_name: str
 ) -> tuple[ColumnElement, AliasedClass | FromClause]:
     """
     Concat attributes of the nested entity to be used in filtering
@@ -57,7 +57,7 @@ def get_column_attributes(
 
 
 def handle_column_enum(
-    column: Any, stmt: Select, query_model: QueryModel
+        column: Any, stmt: Select, query_model: QueryModel
 ) -> Select | None:
     """
     Apply filter for enum column
@@ -122,6 +122,20 @@ def sort(entity: Any, column: Any, stmt: Select, query_model: QueryModel) -> Sel
         )
 
 
+def concat_filter(entity: Any, stmt: Select, query_model: QueryModel) -> Select:
+    """
+    concat every column in the entity to be used in filtering
+
+    useful when we want to filter a whole entity.
+    """
+
+    columns = [getattr(entity, column.name) for column in entity.__table__.columns]
+
+    combined_column = func.concat(*columns)
+
+    return stmt.filter(cast(combined_column, String).ilike(f"%{query_model.q}%"))
+
+
 def filter_and_sort(stmt: Select, query_model: QueryModel) -> Select:
     if query_model.sort_by:
 
@@ -139,5 +153,10 @@ def filter_and_sort(stmt: Select, query_model: QueryModel) -> Select:
         # apply sort
         if query_model.order:
             stmt = sort(entity, column, stmt, query_model)
+    else:
+        # apply filter
+        if query_model.q:
+            entity = stmt.column_descriptions[0]["entity"]
+            stmt = concat_filter(entity, stmt, query_model)
 
     return stmt
